@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF--8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema de Recomendação Inteligente</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Sistema de Recomendação Inteligente</h1>
+      <p>Simule seu comportamento e veja a mágica acontecer.</p>
+    </header>
+    <main>
+      <div class="simulation-area">
+        <h2>Simulador de Comportamento</h2>
+        <div class="input-group">
+          <input
+            type="text"
+            id="action-input"
+            placeholder="Ex: procurei por um livro de ficção científica..."
+          />
+          <button id="action-button">Analisar Interesse</button>
+        </div>
+      </div>
+
+      <div class="user-profile">
+        <h2>Seu Perfil de Interesses</h2>
+        <div id="profile-tokens" class="tokens-container">
+          <p>Seu perfil está vazio. Interaja para começar!</p>
+        </div>
+      </div>
+
+      <div class="tree-visualization">
+        <h2>Visualização da Árvore de Perfil (Trie)</h2>
+        <div id="tree-container" class="tree-container"></div>
+      </div>
+
+      <div class="recommendations-area">
+        <h2>✨ Produtos Recomendados para Você</h2>
+        <div id="recommendations-container" class="cards-container"></div>
+      </div>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

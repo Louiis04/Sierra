@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Recomendação - Sierra</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .input-section {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 70%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .profile-token {
+            display: inline-block;
+            background-color: #e7f3ff;
+            color: #0066cc;
+            padding: 5px 10px;
+            margin: 3px;
+            border-radius: 15px;
+            font-size: 14px;
+        }
+        .recommendation {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .recommendation h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .score {
+            font-weight: bold;
+            color: #28a745;
+        }
+        .matching-tokens {
+            margin-top: 10px;
+        }
+        .token {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 2px 6px;
+            margin: 2px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+        #loading {
+            display: none;
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Sistema de Recomendação Sierra</h1>
+    
+    <div class="container">
+        <h2>Simular Ação do Usuário</h2>
+        <div class="input-section">
+            <input type="text" id="actionInput" placeholder="Digite uma ação do usuário (ex: 'procurando notebook para jogos')" />
+            <button onclick="submitAction()">Enviar Ação</button>
+        </div>
+        <div id="loading">Processando...</div>
+        <div id="actionResult"></div>
+    </div>
+
+    <div class="container">
+        <h2>Perfil do Usuário</h2>
+        <button onclick="loadProfile()">Carregar Perfil</button>
+        <div id="profileResult"></div>
+    </div>
+
+    <div class="container">
+        <h2>Recomendações</h2>
+        <button onclick="loadRecommendations()">Gerar Recomendações</button>
+        <div id="recommendationsResult"></div>
+    </div>
+
+    <script>
+        const API_BASE = '';
+
+        async function submitAction() {
+            const actionText = document.getElementById('actionInput').value;
+            if (!actionText.trim()) {
+                alert('Por favor, digite uma ação!');
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'block';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/user/action`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ action_text: actionText })
+                });
+
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    document.getElementById('actionResult').innerHTML = `
+                        <p><strong>✅ Ação processada com sucesso!</strong></p>
+                        <p>Tokens extraídos: ${data.tokens_added.join(', ')}</p>
+                    `;
+                    document.getElementById('actionInput').value = '';
+                    
+                    // Atualizar perfil automaticamente
+                    setTimeout(() => loadProfile(), 500);
+                } else {
+                    document.getElementById('actionResult').innerHTML = `
+                        <p style="color: red;"><strong>❌ Erro:</strong> ${data.error}</p>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('actionResult').innerHTML = `
+                    <p style="color: red;"><strong>❌ Erro de conexão:</strong> ${error.message}</p>
+                `;
+            }
+            
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        async function loadProfile() {
+            try {
+                const response = await fetch(`${API_BASE}/api/user/profile`);
+                const data = await response.json();
+                
+                if (data.profile && data.profile.length > 0) {
+                    const profileHtml = data.profile.map(token => 
+                        `<span class="profile-token">${token.token} (${token.relevance})</span>`
+                    ).join('');
+                    
+                    document.getElementById('profileResult').innerHTML = `
+                        <h3>Interesses do Usuário:</h3>
+                        <div>${profileHtml}</div>
+                    `;
+                } else {
+                    document.getElementById('profileResult').innerHTML = `
+                        <p>Nenhum interesse registrado ainda. Envie algumas ações do usuário primeiro!</p>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('profileResult').innerHTML = `
+                    <p style="color: red;"><strong>❌ Erro:</strong> ${error.message}</p>
+                `;
+            }
+        }
+
+        async function loadRecommendations() {
+            try {
+                const response = await fetch(`${API_BASE}/api/recommendations`);
+                const data = await response.json();
+                
+                if (data.recommendations && data.recommendations.length > 0) {
+                    const recommendationsHtml = data.recommendations.map(rec => `
+                        <div class="recommendation">
+                            <h3>${rec.product.name}</h3>
+                            <p><strong>Marca:</strong> ${rec.product.brand}</p>
+                            <p><strong>Categoria:</strong> ${rec.product.category}</p>
+                            <p><strong>Descrição:</strong> ${rec.product.description}</p>
+                            <p class="score">📊 Score de Afinidade: ${rec.affinity_score}</p>
+                            <div class="matching-tokens">
+                                <strong>Tokens correspondentes:</strong>
+                                ${rec.matching_tokens.map(token => `<span class="token">${token}</span>`).join('')}
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    document.getElementById('recommendationsResult').innerHTML = recommendationsHtml;
+                } else {
+                    document.getElementById('recommendationsResult').innerHTML = `
+                        <p>Nenhuma recomendação disponível. Registre algumas ações do usuário primeiro!</p>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('recommendationsResult').innerHTML = `
+                    <p style="color: red;"><strong>❌ Erro:</strong> ${error.message}</p>
+                `;
+            }
+        }
+
+        // Permitir envio com Enter
+        document.getElementById('actionInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitAction();
+            }
+        });
+
+        // Carregar perfil na inicialização
+        window.addEventListener('load', function() {
+            loadProfile();
+        });
+    </script>
+</body>
+</html>
