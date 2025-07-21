@@ -1,4 +1,9 @@
 import { Product } from '../interfaces/Product.interface';
+interface CategoryNodeStructure {
+    name: string;
+    path: string[];
+    children: CategoryNodeStructure[];
+}
 
 class CategoryNode {
     public categoryName: string;
@@ -18,7 +23,6 @@ export class ProductCatalogTree {
     constructor() {
         this.root = new CategoryNode('Catalogo');
     }
-    
     public addProduct(product: Product): void {
         let currentNode = this.root;
         for (const category of product.categoryPath) {
@@ -47,11 +51,14 @@ export class ProductCatalogTree {
         return allProducts;
     }
     
-    private collectAllProducts(node: CategoryNode, productList: Product[]): void {
-        productList.push(...node.products);
-        for (const childNode of node.children.values()) {
-            this.collectAllProducts(childNode, productList);
+    public getCategoryTreeStructure(): CategoryNodeStructure[] {
+        const structure: CategoryNodeStructure[] = [];
+        const sortedChildren = new Map([...this.root.children.entries()].sort());
+
+        for (const [name, node] of sortedChildren) {
+            structure.push(this.convertCategoryNodeToJson(node, [name]));
         }
+        return structure;
     }
     
     public visualize(): void {
@@ -59,7 +66,30 @@ export class ProductCatalogTree {
         this.visualizeNode(this.root, 0);
         console.log("---------------------------------------------------");
     }
-    
+        
+    private collectAllProducts(node: CategoryNode, productList: Product[]): void {
+        productList.push(...node.products);
+
+        for (const childNode of node.children.values()) {
+            this.collectAllProducts(childNode, productList);
+        }
+    }
+
+    private convertCategoryNodeToJson(node: CategoryNode, currentPath: string[]): CategoryNodeStructure {
+        const childrenJson: CategoryNodeStructure[] = [];
+        const sortedChildren = new Map([...node.children.entries()].sort());
+
+        for (const [name, childNode] of sortedChildren) {
+            childrenJson.push(this.convertCategoryNodeToJson(childNode, [...currentPath, name]));
+        }
+
+        return {
+            name: node.categoryName,
+            path: currentPath,
+            children: childrenJson,
+        };
+    }
+
     private visualizeNode(node: CategoryNode, depth: number): void {
         const indent = "  ".repeat(depth);
         const productCount = node.products.length > 0 ? ` [Contém ${node.products.length} produto(s)]` : '';

@@ -1,47 +1,70 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF--8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Recomendação Inteligente</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="#" class="nav-brand">Recomenda.AI</a>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#" id="nav-home" class="nav-link active">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" id="nav-categories" class="nav-link">Categorias</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
     <header>
-      <h1>Sistema de Recomendação Inteligente</h1>
-      <p>Simule seu comportamento e veja a mágica acontecer.</p>
+        <h1>Sistema de Recomendação Inteligente</h1>
+        <p>Simule seu comportamento e veja a mágica acontecer.</p>
     </header>
+
     <main>
-      <div class="simulation-area">
-        <h2>Simulador de Comportamento</h2>
-        <div class="input-group">
-          <input
-            type="text"
-            id="action-input"
-            placeholder="Ex: procurei por um livro de ficção científica..."
-          />
-          <button id="action-button">Analisar Interesse</button>
+        <div id="home-page" class="page">
+            <div class="simulation-area">
+                <h2>Simulador de Comportamento</h2>
+                <div class="input-group">
+                    <input type="text" id="action-input" placeholder="Ex: procurei por um livro de ficção científica...">
+                    <button id="action-button">Analisar Interesse</button>
+                </div>
+            </div>
+
+            <div class="user-profile">
+                <h2>Seu Perfil de Interesses</h2>
+                <div id="profile-tokens" class="tokens-container"></div>
+            </div>
+
+            <div class="recommendations-area">
+                <h2>✨ Produtos Recomendados para Você</h2>
+                <div id="recommendations-container" class="cards-container"></div>
+            </div>
+
+            <div class="tree-visualization">
+                <h2>Visualização da Árvore de Perfil (Trie)</h2>
+                <div id="tree-container" class="tree-container"></div>
+            </div>
         </div>
-      </div>
 
-      <div class="user-profile">
-        <h2>Seu Perfil de Interesses</h2>
-        <div id="profile-tokens" class="tokens-container">
-          <p>Seu perfil está vazio. Interaja para começar!</p>
+        <div id="categories-page" class="page hidden">
+            <aside class="category-navigation">
+                <h2>Navegar por Categorias</h2>
+                <div id="category-list-container"></div>
+            </aside>
+    
+            <div class="category-products-area">
+                <h2 id="category-products-title">Produtos da Categoria</h2>
+                <div id="category-products-container" class="cards-container"></div>
+            </div>
         </div>
-      </div>
-
-      <div class="tree-visualization">
-        <h2>Visualização da Árvore de Perfil (Trie)</h2>
-        <div id="tree-container" class="tree-container"></div>
-      </div>
-
-      <div class="recommendations-area">
-        <h2>✨ Produtos Recomendados para Você</h2>
-        <div id="recommendations-container" class="cards-container"></div>
-      </div>
     </main>
 
     <script src="app.js"></script>
-  </body>
+</body>
 </html>

@@ -188,6 +188,44 @@ app.get('/api/user/profile/tree', (req, res) => {
     res.json(treeStructure);
 });
 
+app.get('/api/categories', (req, res) => {
+    const categoryTree = catalog.getCategoryTreeStructure();
+    res.json(categoryTree);
+});
+
+app.get('/api/products/by-category', (req, res) => {
+    const categoryPathQuery = req.query.path;
+    if (typeof categoryPathQuery !== 'string') {
+        return res.status(400).json({ error: 'Query param "path" must be a string' });
+    }
+    
+    const categoryPath = categoryPathQuery.split(',');
+    
+    const products = catalog.findProductsByCategory(categoryPath);
+    
+    const response = products.map(p => ({
+        product: {
+            name: p.name,
+            brand: p.brand,
+            category: p.categoryPath.join(' > '),
+            description: p.description
+        }
+    }));
+    
+    res.json({ products: response });
+});
+
+app.post('/api/user/profile/update-token', (req, res) => {
+    const { token, newWeight } = req.body;
+    if (typeof token !== 'string' || typeof newWeight !== 'number') {
+        return res.status(400).json({ error: 'token (string) and newWeight (number) are required' });
+    }
+    
+    userProfile.update(token, newWeight);
+    
+    res.json({ status: 'success', message: `Token '${token}' updated to weight ${newWeight}`});
+});
+
 const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Servidor de recomendação rodando em http://localhost:${PORT}`);
