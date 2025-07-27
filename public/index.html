@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Recomendação Inteligente</title>
+    <title>Recomenda.AI - Sistema de Recomendação Inteligente</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,10 +15,10 @@
             <a href="#" class="nav-brand">Recomenda.AI</a>
             <ul class="nav-menu">
                 <li class="nav-item">
-                    <a href="#" id="nav-home" class="nav-link active">Home</a>
+                    <a href="#" id="nav-home" class="nav-link active">🏠 Home</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" id="nav-categories" class="nav-link">Categorias</a>
+                    <a href="#" id="nav-categories" class="nav-link">📋 Categorias</a>
                 </li>
             </ul>
         </div>
@@ -23,44 +26,62 @@
 
     <header>
         <h1>Sistema de Recomendação Inteligente</h1>
-        <p>Simule seu comportamento e veja a mágica acontecer.</p>
+        <p>✨ Simule seu comportamento e descubra produtos personalizados</p>
     </header>
 
     <main>
         <div id="home-page" class="page">
             <div class="simulation-area">
-                <h2>Simulador de Comportamento</h2>
+                <h2>🎯 Simulador de Comportamento</h2>
                 <div class="input-group">
-                    <input type="text" id="action-input" placeholder="Ex: procurei por um livro de ficção científica...">
-                    <button id="action-button">Analisar Interesse</button>
+                    <input type="text" id="action-input" placeholder="💭 Ex: preciso de um livro de ficção científica para relaxar...">
+                    <button id="action-button">
+                        <span>🔍 Analisar Interesse</span>
+                    </button>
                 </div>
             </div>
 
             <div class="user-profile">
-                <h2>Seu Perfil de Interesses</h2>
-                <div id="profile-tokens" class="tokens-container"></div>
+                <h2>👤 Seu Perfil de Interesses</h2>
+                <div id="profile-tokens" class="tokens-container">
+                    <p style="color: #64748b; font-style: italic;">Seu perfil está vazio. Interaja para começar! 🚀</p>
+                </div>
             </div>
 
             <div class="recommendations-area">
                 <h2>✨ Produtos Recomendados para Você</h2>
-                <div id="recommendations-container" class="cards-container"></div>
+                <div id="recommendations-container" class="cards-container">
+                    <p style="color: #64748b; font-style: italic; grid-column: 1 / -1; text-align: center; padding: 2rem;">
+                        Nenhuma recomendação disponível ainda. Tente analisar um interesse! 🎪
+                    </p>
+                </div>
             </div>
 
             <div class="tree-visualization">
-                <h2>Visualização da Árvore de Perfil (Trie)</h2>
-                <div id="tree-container" class="tree-container"></div>
+                <h2>🌳 Visualização da Árvore de Perfil (Trie)</h2>
+                <div id="tree-container" class="tree-container">
+                    <p style="color: #64748b; font-style: italic; text-align: center; padding: 2rem;">
+                        A árvore de perfil aparecerá aqui após suas primeiras interações 🌱
+                    </p>
+                </div>
             </div>
         </div>
 
         <div id="categories-page" class="page hidden">
-            <aside class="category-navigation">
-                <h2>Navegar por Categorias</h2>
-                <div id="category-list-container"></div>
-            </aside>
+            <div class="category-navigation">
+                <h2>🗂️ Navegar por Categorias</h2>
+                <div id="category-list-container">
+                    <p style="color: #64748b; font-style: italic;">Carregando categorias... ⏳</p>
+                </div>
+            </div>
     
             <div class="category-products-area">
-                <h2 id="category-products-title">Produtos da Categoria</h2>
-                <div id="category-products-container" class="cards-container"></div>
+                <h2 id="category-products-title">📦 Produtos da Categoria</h2>
+                <div id="category-products-container" class="cards-container">
+                    <p style="color: #64748b; font-style: italic; grid-column: 1 / -1; text-align: center; padding: 2rem;">
+                        Selecione uma categoria para ver os produtos disponíveis 🎯
+                    </p>
+                </div>
             </div>
         </div>
     </main>
