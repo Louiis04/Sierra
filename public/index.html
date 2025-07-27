@@ -12,7 +12,12 @@
 <body>
     <nav class="navbar">
         <div class="navbar-container">
-            <a href="#" class="nav-brand">Recomenda.AI</a>
+            <!-- Logo/Brand -->
+            <div class="nav-brand">
+                <h2>🔍 Recomenda.AI</h2>
+            </div>
+            
+            <!-- Menu de navegação -->
             <ul class="nav-menu">
                 <li class="nav-item">
                     <a href="#" id="nav-home" class="nav-link active">🏠 Home</a>
@@ -21,6 +26,11 @@
                     <a href="#" id="nav-categories" class="nav-link">📋 Categorias</a>
                 </li>
             </ul>
+            
+            <!-- Área do usuário -->
+            <div class="nav-user" id="user-info">
+                <span class="user-loading">⏳ Carregando...</span>
+            </div>
         </div>
     </nav>
 
@@ -86,6 +96,8 @@
         </div>
     </main>
 
+    <!-- Incluir arquivos JavaScript -->
+    <script src="auth.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

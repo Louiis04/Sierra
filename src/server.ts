@@ -1,13 +1,17 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import cookieParser from 'cookie-parser';
 import { UserProfileTree } from './trees/UserProfileTree';
 import { ProductCatalogTree } from './trees/ProductCatalogTree';
 import { processUserAction, generateRecommendations } from './logic/RecommendationEngine';
 import { Product } from './interfaces/Product.interface';
+import { UserManager } from './services/UserManager';
+import { createAuthMiddleware, AuthRequest } from './middleware/auth';
 
-const userProfile = new UserProfileTree();
 const catalog = new ProductCatalogTree();
+const userManager = new UserManager();
+const authMiddleware = createAuthMiddleware(userManager);
 const DECAY_FACTOR = 0.9;
 
 const products: Product[] = [
@@ -138,17 +142,110 @@ const products: Product[] = [
 products.forEach(p => catalog.addProduct(p));
 
 const app = express();
-app.use(cors()); 
+app.use(cors({ 
+    origin: true,
+    credentials: true 
+}));
 app.use(express.json()); 
-
+app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
+app.post('/api/auth/register', async (req, res) => {
+    try {
+        const { username, email, password } = req.body;
+        
+        if (!username || !email || !password) {
+            return res.status(400).json({ error: 'Username, email e password são obrigatórios' });
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({ error: 'Password deve ter pelo menos 6 caracteres' });
+        }
+
+        const result = await userManager.register({ username, email, password });
+        
+        if (result.success) {
+            res.status(201).json({ 
+                message: result.message, 
+                userId: result.userId 
+            });
+        } else {
+            res.status(400).json({ error: result.message });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email e password são obrigatórios' });
+        }
+
+        const result = await userManager.login({ email, password });
+        
+        if (result.success && result.session) {
+            // Configurar cookie de sessão
+            res.cookie('sessionId', result.session.sessionId, {
+                httpOnly: true,
+                secure: false, // true em produção com HTTPS
+                maxAge: 24 * 60 * 60 * 1000 // 24 horas
+            });
+
+            res.json({ 
+                message: result.message,
+                user: {
+                    userId: result.session.userId,
+                    username: result.session.username,
+                    email: result.session.email
+                },
+                sessionId: result.session.sessionId
+            });
+        } else {
+            res.status(401).json({ error: result.message });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+app.post('/api/auth/logout', authMiddleware, (req: AuthRequest, res) => {
+    const sessionId = req.cookies?.sessionId;
+    if (sessionId) {
+        userManager.logout(sessionId);
+        res.clearCookie('sessionId');
+    }
+    res.json({ message: 'Logout realizado com sucesso' });
+});
+
+app.get('/api/auth/me', authMiddleware, (req: AuthRequest, res) => {
+    const user = userManager.getUserById(req.user!.userId);
+    if (user) {
+        res.json({
+            userId: user.id,
+            username: user.username,
+            email: user.email,
+            createdAt: user.createdAt,
+            lastLogin: user.lastLogin
+        });
+    } else {
+        res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+});
 
 
-app.post('/api/user/action', (req, res) => {
+app.post('/api/user/action', authMiddleware, (req: AuthRequest, res) => {
     const { action_text } = req.body;
     if (!action_text) {
         return res.status(400).json({ error: 'action_text is required' });
+    }
+
+    const userProfile = userManager.getUserProfile(req.user!.userId);
+    if (!userProfile) {
+        return res.status(404).json({ error: 'Perfil do usuário não encontrado' });
     }
 
     userProfile.applyDecay(DECAY_FACTOR);
@@ -158,7 +255,12 @@ app.post('/api/user/action', (req, res) => {
     res.json({ status: 'success', tokens_added: tokens });
 });
 
-app.get('/api/user/profile', (req, res) => {
+app.get('/api/user/profile', authMiddleware, (req: AuthRequest, res) => {
+    const userProfile = userManager.getUserProfile(req.user!.userId);
+    if (!userProfile) {
+        return res.status(404).json({ error: 'Perfil do usuário não encontrado' });
+    }
+
     const profileTokens = userProfile.getTopTokens(10).map(t => ({
         token: t.token,
         relevance: parseFloat(t.weight.toFixed(2))
@@ -166,7 +268,12 @@ app.get('/api/user/profile', (req, res) => {
     res.json({ profile: profileTokens });
 });
 
-app.get('/api/recommendations', (req, res) => {
+app.get('/api/recommendations', authMiddleware, (req: AuthRequest, res) => {
+    const userProfile = userManager.getUserProfile(req.user!.userId);
+    if (!userProfile) {
+        return res.status(404).json({ error: 'Perfil do usuário não encontrado' });
+    }
+
     const recommendations = generateRecommendations(userProfile, catalog, 10);
     
     const response = recommendations.map(rec => ({
@@ -183,10 +290,32 @@ app.get('/api/recommendations', (req, res) => {
     res.json({ recommendations: response });
 });
 
-app.get('/api/user/profile/tree', (req, res) => {
+app.get('/api/user/profile/tree', authMiddleware, (req: AuthRequest, res) => {
+    const userProfile = userManager.getUserProfile(req.user!.userId);
+    if (!userProfile) {
+        return res.status(404).json({ error: 'Perfil do usuário não encontrado' });
+    }
+
     const treeStructure = userProfile.getTreeStructure();
     res.json(treeStructure);
 });
+
+app.post('/api/user/profile/update-token', authMiddleware, (req: AuthRequest, res) => {
+    const { token, newWeight } = req.body;
+    if (typeof token !== 'string' || typeof newWeight !== 'number') {
+        return res.status(400).json({ error: 'token (string) and newWeight (number) are required' });
+    }
+    
+    const userProfile = userManager.getUserProfile(req.user!.userId);
+    if (!userProfile) {
+        return res.status(404).json({ error: 'Perfil do usuário não encontrado' });
+    }
+    
+    userProfile.update(token, newWeight);
+    
+    res.json({ status: 'success', message: `Token '${token}' updated to weight ${newWeight}`});
+});
+
 
 app.get('/api/categories', (req, res) => {
     const categoryTree = catalog.getCategoryTreeStructure();
@@ -200,7 +329,6 @@ app.get('/api/products/by-category', (req, res) => {
     }
     
     const categoryPath = categoryPathQuery.split(',');
-    
     const products = catalog.findProductsByCategory(categoryPath);
     
     const response = products.map(p => ({
@@ -215,19 +343,9 @@ app.get('/api/products/by-category', (req, res) => {
     res.json({ products: response });
 });
 
-app.post('/api/user/profile/update-token', (req, res) => {
-    const { token, newWeight } = req.body;
-    if (typeof token !== 'string' || typeof newWeight !== 'number') {
-        return res.status(400).json({ error: 'token (string) and newWeight (number) are required' });
-    }
-    
-    userProfile.update(token, newWeight);
-    
-    res.json({ status: 'success', message: `Token '${token}' updated to weight ${newWeight}`});
-});
-
 const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Servidor de recomendação rodando em http://localhost:${PORT}`);
     console.log('📚 Catálogo inicializado com', catalog.getAllProducts().length, 'produtos.');
+    console.log('👤 Sistema de usuários ativo');
 });
